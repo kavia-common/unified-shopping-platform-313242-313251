@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from src.api.core.config import get_settings
+from src.api.db.session import engine
 from src.api.routers import auth_router, cart_router, orders_router, products_router
 
 openapi_tags = [
@@ -53,6 +55,39 @@ def health_config():
         "cors_allow_origins": settings.cors_allow_origins,
         "database_url_driver_hint": "postgresql+psycopg",
     }
+
+
+@app.on_event("startup")
+def _startup_db_ping() -> None:
+    """
+    Best-effort DB ping at startup.
+
+    This does not block startup (to avoid changing behavior), but it will log a clear
+    message if connectivity is broken so issues surface early.
+    """
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        print("DB connectivity check OK")
+    except Exception as exc:  # pragma: no cover
+        print(f"DB connectivity check FAILED: {exc}")
+
+
+@app.get(
+    "/health/db",
+    tags=["health"],
+    summary="Database connectivity check",
+    description="Runs a lightweight `SELECT 1` against the configured database.",
+    operation_id="health_db",
+)
+def health_db():
+    """Check database connectivity with a lightweight `SELECT 1`."""
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return {"database": "ok"}
+    except Exception as exc:
+        return {"database": "error", "detail": str(exc)}
 
 
 app.include_router(auth_router)

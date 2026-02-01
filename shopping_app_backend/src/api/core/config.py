@@ -28,8 +28,8 @@ def _default_database_url() -> str:
     Provide a sane local default for development based on the task-provided
     connection string. This is NOT a secret, but still allows overriding via env.
     """
-    # Standardized DB port is 5000 per task. This default matches db_connection.txt.
-    return "postgresql+psycopg://appuser:dbuser123@localhost:5000/myapp"
+    # Standardized DB port is 5001 per task. This default matches db_connection.txt.
+    return "postgresql+psycopg://appuser:dbuser123@localhost:5001/myapp"
 
 
 def _getenv_first(*names: str) -> Optional[str]:
