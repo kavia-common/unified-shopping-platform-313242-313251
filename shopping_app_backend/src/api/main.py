@@ -35,6 +35,26 @@ def health_check():
     return {"message": "Healthy"}
 
 
+@app.get(
+    "/health/config",
+    tags=["health"],
+    summary="Config snapshot (non-secret)",
+    description=(
+        "Returns a non-secret snapshot of runtime configuration to help validate "
+        "env wiring, base URLs, and CORS settings."
+    ),
+    operation_id="health_config",
+)
+def health_config():
+    """Return a non-secret snapshot of config (URLs + CORS origins)."""
+    return {
+        "backend_base_url": settings.backend_base_url,
+        "frontend_url": settings.frontend_url,
+        "cors_allow_origins": settings.cors_allow_origins,
+        "database_url_driver_hint": "postgresql+psycopg",
+    }
+
+
 app.include_router(auth_router)
 app.include_router(products_router)
 app.include_router(cart_router)
